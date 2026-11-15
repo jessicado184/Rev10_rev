@@ -3,15 +3,19 @@ import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Bật log để theo dõi hoạt động
+# Bật log
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
-# Lấy Token từ biến môi trường của Render hoặc dùng token của bạn
 TOKEN = os.getenv("BOT_TOKEN", "9079432179:AAEAeCNlpPHVg8fQWgr05B6i_P4JkrNy90c")
 
-# Danh sách 11 câu hỏi điền khuyết Kinh Thánh (Chương 10)
+# Lấy URL của ứng dụng trên Render từ biến môi trường (Render tự cấp)
+# Hoặc bạn thay trực tiếp link của bạn vào: "https://ten-ung-dung.onrender.com"
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "https://rev10-rev.onrender.com")
+PORT = int(os.environ.get("PORT", 10000))
+
+# Danh sách 11 câu hỏi Kinh Thánh (Chương 10)
 QUIZ_QUESTIONS = [
     {
         "question": "Tôi lại thấy một [1] khác đầy uy lực mặc mây từ trời xuống, trên đầu ngài có [2], gương mặt giống như mặt trời, chân giống như [3]",
@@ -81,19 +85,19 @@ QUIZ_QUESTIONS = [
     }
 ]
 
-# Lệnh /start: Chào mừng và hướng dẫn
+# Lệnh /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "🎮 Chào mừng bạn đến với **Quiz Kinh Thánh (Khải Huyền Chương 10)**!\n\n"
         "Gõ lệnh `/play` để bắt đầu làm bài trắc nghiệm nhé!"
     )
 
-# Lệnh /play: Tự động phát lần lượt 11 câu hỏi dạng Quiz Poll
+# Lệnh /play
 async def play_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
     await context.bot.send_message(
         chat_id=chat_id, 
-        text="🚀 Đang gửi 11 câu hỏi trắc nghiệm điền khuyết. Hãy chọn đáp án chính xác nhất cho từng câu dưới đây:"
+        text="🚀 Đang gửi 11 câu hỏi trắc nghiệm điền khuyết:"
     )
 
     for i, q in enumerate(QUIZ_QUESTIONS, 1):
@@ -109,13 +113,20 @@ async def play_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 def main() -> None:
+    # Khởi tạo ứng dụng bot
     application = Application.builder().token(TOKEN).build()
-
+    
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("play", play_quiz))
 
-    print("Bot Quiz đang chạy ở chế độ Polling...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Chạy ở chế độ Webhook thuần túy của Render Web Service
+    print("Bot đang chạy ở chế độ Webhook...")
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        webhook_url=f"{RENDER_EXTERNAL_URL}/{TOKEN}",
+        secret_token="somesecuretoken123", # Bảo mật webhook
+    )
 
 if __name__ == "__main__":
     main()
