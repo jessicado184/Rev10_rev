@@ -11,7 +11,6 @@ logging.basicConfig(
 TOKEN = os.getenv("BOT_TOKEN", "9079432179:AAEAeCNlpPHVg8fQWgr05B6i_P4JkrNy90c")
 
 # Lấy URL của ứng dụng trên Render từ biến môi trường (Render tự cấp)
-# Hoặc bạn thay trực tiếp link của bạn vào: "https://ten-ung-dung.onrender.com"
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "https://rev10-rev.onrender.com")
 PORT = int(os.environ.get("PORT", 10000))
 
@@ -124,6 +123,7 @@ def main() -> None:
     application.run_webhook(
         listen="0.0.0.0",
         port=PORT,
+        url_path=TOKEN,  # <--- Đã thêm url_path để khớp chính xác với Token, tránh lỗi 404
         webhook_url=f"{RENDER_EXTERNAL_URL}/{TOKEN}",
         secret_token="somesecuretoken123", # Bảo mật webhook
     )
